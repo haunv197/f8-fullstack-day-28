@@ -329,6 +329,7 @@ body {
 }
 
 .load-more-btn {
+  display: none;
   background: #ff9800;
   color: white;
   border: none;
@@ -340,7 +341,9 @@ body {
   margin-top: 20px;
   transition: background 0.3s ease;
 }
-
+.load-more-btn.show {
+  display: block;
+}
 .load-more-btn:hover {
   background: #f57c00;
 }
@@ -506,6 +509,14 @@ body {
 }
 
 .success-message.show {
+  display: block;
+}
+
+.auto-retry-load-user-profile-card {
+  display: none;
+}
+
+.auto-retry-load-user-profile-card.show {
   display: block;
 }
 
