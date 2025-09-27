@@ -165,6 +165,73 @@ searchUserBtn.addEventListener("click", function () {
 
 // Chức năng 2: Posts với Comments
 
+function renderPosts(posts, users) {
+  const postListElement = posts.map(post => {
+    const postID = post.id;
+    const user = users.find(user => user.id === post.userId);
+    return `<div class="post-item" data-post-id="${postID}">
+    <h4 class="post-title">${post.title}</h4>
+    <p class="post-body">${post.body}</p>
+    <p class="post-author">Tác giả: <span class="author-name">${user.name} - ${user.email}</span></p>
+    <button class="show-comments-btn" onclick="handleShowComment(${postID}, '${user.name}')" data-post-id="${postID}">Xem comments</button>
+    <div class="comments-container" data-post-id="${postID}">
+      <!-- Comments sẽ được load động -->
+    </div>
+    <div class="loading-spinner">
+      <p>🔄 Đang tải comments...</p>
+    </div> 
+    <div class="error-message">
+      <p class="error-message-text">Có lỗi xảy ra khi tải comments</p>
+    </div>
+  </div>`
+  }).join("");
+
+  postsContainer.innerHTML += postListElement;
+  return;
+}
+
+function renderComments(comments, postID, userName) {
+  const commentsContainer = document.querySelector(`.comments-container[data-post-id="${postID}"]`);
+
+  if (comments && comments.length) {
+    commentsContainer.classList.add("show")
+    commentsContainer.innerHTML = comments.map(comment => (
+      `<div class="comment-item">
+        <div class="comment-author">${comment.name} - ${userName}</div>
+        <div class="comment-email">${comment.email}</div>
+        <div class="comment-body">${comment.body}</div>
+      </div>`
+    )).join("");
+  }
+  return;
+}
+
+function handleShowComment(postID, userName) {
+  const btnComment = document.querySelector(`.show-comments-btn[data-post-id="${postID}"]`);
+
+  const postItem = btnComment.closest(".post-item");
+  const loadingSpinner = postItem.querySelector(".loading-spinner");
+  loadingSpinner.classList.add("show");
+
+  sendRequest(METHOD_GET, `https://jsonplaceholder.typicode.com/posts/${postID}/comments`, (error, comments) => {
+    loadingSpinner.classList.remove("show");
+
+    // Show error khi gọi api
+    if (error) {
+      const commentsError = postItem.querySelector(".error-message");
+      const postsErrorText = postItem.querySelector(".error-message-text");
+
+      commentsError.classList.add("show");
+      postsErrorText.textContent = `${error.message}. Post ID là ${postID}`;
+      return;
+    }
+
+    //render comments
+    renderComments(comments, postID, userName)
+  })
+  return;
+}
+
 function loadPosts(numberPost) {
   postsLoading.classList.add("show");
 
@@ -177,79 +244,20 @@ function loadPosts(numberPost) {
     }
 
     if (posts && posts.length) {
-      posts.forEach(post => {
-        //get user by postId
-        sendRequest(METHOD_GET, `https://jsonplaceholder.typicode.com//users/${post.userId}`, (error, user) => {
-          postsLoading.classList.remove("show");
-          if (error) {
-            postsError.classList.add("show");
-            postsErrorText.textContent = `${error.message}. User Id là ${post.userId}`;
-            return;
-          }
-
-          // render posts
-          const postID = post.id;
-          const postItem = document.createElement("div");
-          postItem.className = "post-item";
-          postItem.setAttribute("data-post-id", postID);
-          postItem.innerHTML = `
-              <h4 class="post-title">${post.title} </h4>
-              <p class="post-body">${post.body}</p>
-              <p class="post-author">Tác giả: <span class="author-name">${user.name} - ${user.email}</span></p>
-              <button class="show-comments-btn" data-post-id="${postID}">Xem comments</button>
-              <div class="comments-container" data-post-id="${postID}">
-                <!-- Comments sẽ được load động -->
-              </div>
-              <div class="loading-spinner">
-                <p>🔄 Đang tải comments...</p>
-              </div> 
-              <div class="error-message">
-                <p class="error-message-text">Có lỗi xảy ra khi tải comments</p>
-              </div>`;
-          postsContainer.appendChild(postItem);
-
-          // btn comment click
-          const btnComment = document.querySelector(`.show-comments-btn[data-post-id="${postID}"]`);
-          const commentsContainer = document.querySelector(`.comments-container[data-post-id="${postID}"]`);
-
-          btnComment && btnComment.addEventListener("click", function () {
-            // show loading
-            const postItem = btnComment.closest(".post-item");
-            const loadingSpinner = postItem.querySelector(".loading-spinner");
-            loadingSpinner.classList.add("show");
-
-            sendRequest(METHOD_GET, `https://jsonplaceholder.typicode.com/posts/${postID}/comments`, (error, comments) => {
-              loadingSpinner.classList.remove("show");
-
-              // Show error khi gọi api
-              if (error) {
-                const commentsError = postItem.querySelector(".error-message");
-                const postsErrorText = postItem.querySelector(".error-message-text");
-
-                commentsError.classList.add("show");
-                postsErrorText.textContent = `${error.message}. Post ID là ${postID}`;
-                return;
-              }
-
-              //render comments
-              if (comments && comments.length) {
-                commentsContainer.classList.add("show")
-                commentsContainer.innerHTML = comments.map(comment => (
-                  `<div class="comment-item">
-                  <div class="comment-author">${comment.name} - (${user.name})</div>
-                  <div class="comment-email">${comment.email}</div>
-                  <div class="comment-body">${comment.body}</div>
-                </div>`
-                )).join("");
-              }
-              return;
-            })
-          })
-        });
+      sendRequest(METHOD_GET, `https://jsonplaceholder.typicode.com/users`, (error, users) => {
+        postsLoading.classList.remove("show");
+        if (error) {
+          postsError.classList.add("show");
+          postsErrorText.textContent = `${error.message}`;
+          return;
+        }
+        // render posts
+        renderPosts(posts, users);
       });
     }
-    return;
   })
+
+  return;
 }
 
 loadPosts(NUMBER_POST_SHOW)
@@ -258,8 +266,28 @@ loadPosts(NUMBER_POST_SHOW)
 // Chức năng 3: Todo List với Filter
 let todosData;
 
-loadTodosBtn.addEventListener("click", function () {
+// render Todos
+function renderTodos(todos) {
+  const totalTodosValue = todos.length;
 
+  const completedTodosValue = todos.filter(todo => todo.completed === true).length;
+  const incompleteTodosValue = totalTodosValue - completedTodosValue;
+
+
+  totalTodos.textContent = totalTodosValue;
+  completedTodos.textContent = completedTodosValue;
+  incompleteTodos.textContent = incompleteTodosValue;
+
+  todoList.innerHTML = todos.map(todo => (
+    `<div class="todo-item ${todo.completed ? 'completed' : 'incomplete'}" data-todo-id="${todo.id}" data-completed="${todo.completed}">
+        <div class="todo-checkbox"></div>
+        <div class="todo-text">${todo.title}</div>
+      </div>`
+  )).join("");
+  return;
+}
+
+loadTodosBtn.addEventListener("click", function () {
   const userId = todoUserIdInput.value;
   const checkUserId = ValidateUserId(userId);
 
@@ -330,24 +358,3 @@ todoFilters.addEventListener("click", function (e) {
 
 
 })
-
-// render Todos
-function renderTodos(todos) {
-  const totalTodosValue = todos.length;
-
-  const completedTodosValue = todos.filter(todo => todo.completed === true).length;
-  const incompleteTodosValue = totalTodosValue - completedTodosValue;
-
-
-  totalTodos.textContent = totalTodosValue;
-  completedTodos.textContent = completedTodosValue;
-  incompleteTodos.textContent = incompleteTodosValue;
-
-  todoList.innerHTML = todos.map(todo => (
-    `<div class="todo-item ${todo.completed ? 'completed' : 'incomplete'}" data-todo-id="${todo.id}" data-completed="${todo.completed}">
-        <div class="todo-checkbox"></div>
-        <div class="todo-text">${todo.title}</div>
-      </div>`
-  )).join("");
-  return;
-}
