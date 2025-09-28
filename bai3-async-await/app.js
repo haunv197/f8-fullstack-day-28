@@ -184,7 +184,7 @@ searchUserBtn.addEventListener("click", function () {
 
   // Loading khi gọi api
   userLoading.classList.add("show");
-  const url = `https://jsonplaceholder.typicode.com/users1/${userId}`;
+  const url = `https://jsonplaceholder.typicode.com/users/${userId}`;
   sendRequestUserProfileCard(METHOD_GET, url)
 })
 
