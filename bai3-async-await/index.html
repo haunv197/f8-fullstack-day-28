@@ -33,6 +33,9 @@
         <div id="user-error" class="error-message">
           <p id="user-error-text">Có lỗi xảy ra khi tải thông tin user</p>
         </div>
+        <div id="auto-retry-load-user-profile-card" class="auto-retry-load-user-profile-card">
+          Tự động retry: 0 lần
+        </div>
 
         <div id="user-profile-card" class="user-profile-card">
           <div id="user-avatar" class="user-avatar">U</div>
@@ -68,6 +71,10 @@
       <section class="posts-section" id="posts-section">
         <h3>📝 Posts với Comments</h3>
 
+        <div id="posts-container" class="posts-container">
+          <!-- Posts sẽ được load động bằng JavaScript -->
+        </div>
+
         <div id="posts-loading" class="loading-spinner">
           <p>🔄 Đang tải posts...</p>
         </div>
@@ -76,11 +83,7 @@
           <p id="posts-error-text">Có lỗi xảy ra khi tải posts</p>
         </div>
 
-        <div id="posts-container" class="posts-container">
-          <!-- Posts sẽ được load động bằng JavaScript -->
-        </div>
-
-        <button id="load-more-posts-btn" class="load-more-btn" style="display: none">
+        <button id="load-more-posts-btn" class="load-more-btn">
           Xem thêm Posts
         </button>
       </section>
@@ -166,6 +169,8 @@
     <div class="todo-checkbox"></div>
     <div class="todo-text"></div>
   </div>
+
+  <script src="./app.js"></script>
 </body>
 
 </html>
